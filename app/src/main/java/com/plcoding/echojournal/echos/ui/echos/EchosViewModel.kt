@@ -72,12 +72,10 @@ class EchosViewModel : ViewModel() {
             }
 
             is EchosAction.OnFilterByMoodClick -> {
-                println("here")
                 toggleMoodFilter(action.moodUi)
             }
 
             is EchosAction.OnFilterByTopicClick -> {
-                println("here 2")
                 toggleTopicFilter(action.topic)
             }
         }
