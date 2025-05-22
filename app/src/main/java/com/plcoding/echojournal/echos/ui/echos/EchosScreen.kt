@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.plcoding.echojournal.core.ui.design.theme.EchoJournalTheme
 import com.plcoding.echojournal.core.ui.design.theme.bgGradient
+import com.plcoding.echojournal.echos.ui.echos.components.EchoFilterRow
 import com.plcoding.echojournal.echos.ui.echos.components.EchoRecordFloatingActionButton
 import com.plcoding.echojournal.echos.ui.echos.components.EchosEmptyBackground
 import com.plcoding.echojournal.echos.ui.echos.components.EchosTopBar
@@ -36,7 +37,7 @@ fun EchosRoot(
 @Composable
 fun EchosScreen(
     state: EchosState,
-    onAction: (EchosAction) -> Unit
+    onAction: (EchosAction) -> Unit,
 ) {
     Scaffold(
         floatingActionButton = {
@@ -62,6 +63,18 @@ fun EchosScreen(
                 )
                 .padding(innerPadding)
         ) {
+            EchoFilterRow(
+                moodChipContent = state.moodChipContent,
+                hasActiveMoodFilters = state.hasActiveMoodFilters,
+                selectedEchoFilterChip = state.selectedEchoFilterChip,
+                moods = state.moods,
+                topicChipTitle = state.topicChipTitle,
+                hasActiveTopicFilters = state.hasActiveTopicFilters,
+                topics = state.topics,
+                onAction = onAction,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
             when {
                 state.isLoadingData -> {
                     CircularProgressIndicator(
@@ -78,8 +91,11 @@ fun EchosScreen(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-
                     )
+                }
+
+                else -> {
+
                 }
             }
         }
