@@ -1,19 +1,13 @@
 package com.plcoding.echojournal.echos.ui.echos.components
 
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -25,12 +19,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,11 +29,8 @@ import com.plcoding.echojournal.R
 import com.plcoding.echojournal.core.ui.design.theme.EchoJournalTheme
 import com.plcoding.echojournal.core.ui.design.theme.Microphone
 import com.plcoding.echojournal.core.ui.design.theme.Pause
-import com.plcoding.echojournal.core.ui.design.theme.Primary90
-import com.plcoding.echojournal.core.ui.design.theme.Primary95
-import com.plcoding.echojournal.core.ui.design.theme.buttonGradient
 
-private const val PRIMARY_BUTTON_BUBBLE_SIZE_DP = 128
+private const val PRIMARY_BUTTON_SIZE_DP = 72
 private const val SECONDARY_BUTTON_SIZE_DP = 48
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +70,7 @@ private fun SheetContent(
     onCompleteRecording: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val primaryBubbleSize = PRIMARY_BUTTON_BUBBLE_SIZE_DP.dp
+    val primaryButtonSize = PRIMARY_BUTTON_SIZE_DP.dp
     val secondaryButtonSize = SECONDARY_BUTTON_SIZE_DP.dp
 
     Column(
@@ -138,61 +125,30 @@ private fun SheetContent(
                 )
             }
 
-            val interactionSource = remember {
-                MutableInteractionSource()
-            }
-            val isPressed by interactionSource.collectIsPressedAsState()
-            Box(
-                modifier = Modifier
-                    .size(primaryBubbleSize)
-                    .background(
-                        color = if (isRecording) {
-                            Primary95
+            EchoBubbleFloatingActionButton(
+                showBubble = isRecording,
+                onClick = if (isRecording) {
+                    onCompleteRecording
+                } else {
+                    onResumeClick
+                },
+                icon = {
+                    Icon(
+                        imageVector = if (isRecording) {
+                            Icons.Default.Check
                         } else {
-                            Color.Transparent
+                            Icons.Filled.Microphone
                         },
-                        shape = CircleShape
-                    )
-                    .padding(10.dp)
-                    .background(
-                        color = if (isRecording) {
-                            Primary90
+                        contentDescription = if (isRecording) {
+                            stringResource(R.string.finish_recording)
                         } else {
-                            Color.Transparent
+                            stringResource(R.string.resume_recording)
                         },
-                        shape = CircleShape
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    .padding(16.dp)
-                    .background(
-                        brush = MaterialTheme.colorScheme.buttonGradient,
-                        shape = CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = LocalIndication.current,
-                        onClick = if (isRecording) {
-                            onCompleteRecording
-                        } else {
-                            onResumeClick
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isRecording) {
-                        Icons.Default.Check
-                    } else {
-                        Icons.Filled.Microphone
-                    },
-                    contentDescription = if (isRecording) {
-                        stringResource(R.string.finish_recording)
-                    } else {
-                        stringResource(R.string.resume_recording)
-                    },
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+                },
+                primaryButtonSize = primaryButtonSize
+            )
 
             FilledIconButton(
                 onClick = if (isRecording) {
