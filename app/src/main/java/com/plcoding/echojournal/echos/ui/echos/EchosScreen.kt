@@ -27,6 +27,7 @@ import com.plcoding.echojournal.core.ui.design.theme.EchoJournalTheme
 import com.plcoding.echojournal.core.ui.design.theme.bgGradient
 import com.plcoding.echojournal.core.ui.util.ObserveAsEvents
 import com.plcoding.echojournal.core.ui.util.isAppInForeground
+import com.plcoding.echojournal.echos.domain.recording.RecordingDetails
 import com.plcoding.echojournal.echos.ui.echos.components.EchoFilterRow
 import com.plcoding.echojournal.echos.ui.echos.components.EchoList
 import com.plcoding.echojournal.echos.ui.echos.components.EchoQuickRecordFloatingActionButton
@@ -36,10 +37,10 @@ import com.plcoding.echojournal.echos.ui.echos.components.EchosTopBar
 import com.plcoding.echojournal.echos.ui.echos.models.AudioCaptureMethod
 import com.plcoding.echojournal.echos.ui.echos.models.RecordingState
 import org.koin.androidx.compose.koinViewModel
-import timber.log.Timber
 
 @Composable
 fun EchosRoot(
+    onNavigateToCreateEcho: (RecordingDetails) -> Unit,
     viewModel: EchosViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -66,8 +67,8 @@ fun EchosRoot(
                 ).show()
             }
 
-            EchosEvent.OnDoneRecording -> {
-                Timber.d("Recording successful!")
+            is EchosEvent.OnDoneRecording -> {
+                onNavigateToCreateEcho(event.details)
             }
         }
     }
