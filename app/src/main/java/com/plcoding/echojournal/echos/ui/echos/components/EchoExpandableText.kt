@@ -50,6 +50,8 @@ fun EchoExpandableText(
                         )
                         .dropLast(showMoreText.length + 3)
                         .dropLastWhile { Character.isWhitespace(it) || it == '.' }
+                        .dropLast(1)
+
                     append(adjustedText)
                     append("...")
 
@@ -59,6 +61,7 @@ fun EchoExpandableText(
                             fontWeight = FontWeight.Bold
                         )
                     ) {
+                        append(" ")
                         append(showMoreText)
                     }
                 }

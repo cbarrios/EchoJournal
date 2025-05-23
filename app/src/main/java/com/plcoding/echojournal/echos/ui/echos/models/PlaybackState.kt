@@ -1,4 +1,4 @@
-package com.plcoding.echojournal.echos.ui.models
+package com.plcoding.echojournal.echos.ui.echos.models
 
 enum class PlaybackState {
     PLAYING,
