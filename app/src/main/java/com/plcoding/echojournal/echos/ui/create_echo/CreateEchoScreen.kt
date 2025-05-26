@@ -5,6 +5,7 @@ package com.plcoding.echojournal.echos.ui.create_echo
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -35,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -47,7 +50,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.plcoding.echojournal.R
 import com.plcoding.echojournal.core.ui.design.buttons.PrimaryButton
 import com.plcoding.echojournal.core.ui.design.buttons.SecondaryButton
@@ -56,11 +58,13 @@ import com.plcoding.echojournal.core.ui.design.theme.EchoJournalTheme
 import com.plcoding.echojournal.core.ui.design.theme.Secondary70
 import com.plcoding.echojournal.core.ui.design.theme.Secondary95
 import com.plcoding.echojournal.echos.ui.components.EchoMoodPlayer
+import com.plcoding.echojournal.echos.ui.create_echo.components.SelectMoodSheet
 import com.plcoding.echojournal.echos.ui.models.MoodUi
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CreateEchoRoot(
-    viewModel: CreateEchoViewModel = viewModel()
+    viewModel: CreateEchoViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -134,16 +138,21 @@ fun CreateEchoScreen(
                         )
                     }
                 } else {
-                    Image(
-                        imageVector = ImageVector.vectorResource(state.mood.iconSet.fill),
-                        contentDescription = state.mood.title.asString(),
+                    Box(
                         modifier = Modifier
-                            .height(32.dp)
+                            .clip(CircleShape)
                             .clickable {
                                 onAction(CreateEchoAction.OnSelectMoodClick)
-                            },
-                        contentScale = ContentScale.FillHeight
-                    )
+                            }
+                    ) {
+                        Image(
+                            imageVector = ImageVector.vectorResource(state.mood.iconSet.fill),
+                            contentDescription = state.mood.title.asString(),
+                            modifier = Modifier
+                                .height(32.dp),
+                            contentScale = ContentScale.FillHeight
+                        )
+                    }
                 }
 
                 TransparentHintTextField(
@@ -246,13 +255,25 @@ fun CreateEchoScreen(
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = stringResource(R.string.save),
-                            modifier = Modifier
-                                .size(16.dp)
+                            contentDescription = stringResource(R.string.save)
                         )
                     }
                 )
             }
+        }
+        if (state.showMoodSelector) {
+            SelectMoodSheet(
+                selectedMood = state.selectedMood,
+                onMoodClick = {
+                    onAction(CreateEchoAction.OnMoodClick(it))
+                },
+                onDismiss = {
+                    onAction(CreateEchoAction.OnDismissMoodSelector)
+                },
+                onConfirmClick = {
+                    onAction(CreateEchoAction.OnConfirmMood)
+                }
+            )
         }
     }
 }

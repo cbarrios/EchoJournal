@@ -43,7 +43,8 @@ fun PrimaryButton(
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = contentColor
+            contentColor = contentColor,
+            disabledContainerColor = Color.Transparent
         ),
         modifier = modifier
             .background(
