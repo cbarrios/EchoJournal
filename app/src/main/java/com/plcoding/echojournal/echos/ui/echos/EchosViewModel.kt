@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.plcoding.echojournal.R
 import com.plcoding.echojournal.core.ui.design.dropdowns.Selectable
 import com.plcoding.echojournal.core.ui.util.UiText
+import com.plcoding.echojournal.echos.domain.audio.AudioPlayer
 import com.plcoding.echojournal.echos.domain.recording.VoiceRecorder
 import com.plcoding.echojournal.echos.ui.echos.models.AudioCaptureMethod
 import com.plcoding.echojournal.echos.ui.echos.models.EchoFilterChip
@@ -26,10 +27,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 
 class EchosViewModel(
     private val voiceRecorder: VoiceRecorder,
+    private val audioPlayer: AudioPlayer
 ) : ViewModel() {
 
     companion object {
@@ -38,6 +41,7 @@ class EchosViewModel(
 
     private var hasLoadedInitialData = false
 
+    private val playingEchoId = MutableStateFlow<Int?>(null)
     private val selectedMoodFilters = MutableStateFlow<List<MoodUi>>(emptyList())
     private val selectedTopicFilters = MutableStateFlow<List<String>>(emptyList())
 
@@ -110,18 +114,51 @@ class EchosViewModel(
             }
 
 
-            is EchosAction.OnPlayEchoClick -> {}
+            is EchosAction.OnPlayEchoClick -> onPlayEchoClick(action.echoId)
             is EchosAction.OnTrackSizeAvailable -> {}
             EchosAction.OnAudioPermissionGranted -> {
                 startRecording(captureMethod = AudioCaptureMethod.STANDARD)
             }
 
-            EchosAction.OnPauseAudioClick -> {}
+            EchosAction.OnPauseAudioClick -> audioPlayer.pause()
             EchosAction.OnPauseRecordingClick -> pauseRecording()
             EchosAction.OnCancelRecording -> cancelRecording()
             EchosAction.OnCompleteRecording -> stopRecording()
             EchosAction.OnResumeRecordingClick -> resumeRecording()
         }
+    }
+
+    private fun onPlayEchoClick(echoId: Int) {
+        val selectedEcho = state.value.echos.values.flatten().first { it.id == echoId }
+        val activeTrack = audioPlayer.activeTrack.value
+        val isNewEcho = playingEchoId.value != echoId
+        val isSameEchoPlayingFromBeginning =
+            playingEchoId.value == echoId && activeTrack != null && activeTrack.durationPlayed == ZERO
+        when {
+            isNewEcho || isSameEchoPlayingFromBeginning -> {
+                playingEchoId.update { echoId }
+                audioPlayer.stop()
+                audioPlayer.play(
+                    filePath = selectedEcho.audioFilePath,
+                    onComplete = ::completePlayback
+                )
+            }
+
+            else -> audioPlayer.resume()
+        }
+    }
+
+    private fun completePlayback() {
+        _state.update {
+            it.copy(
+                echos = it.echos.mapValues { (_, echos) ->
+                    echos.map { echo ->
+                        echo.copy(playbackCurrentDuration = ZERO)
+                    }
+                }
+            )
+        }
+        playingEchoId.update { null }
     }
 
     private fun requestAudioPermission() {
