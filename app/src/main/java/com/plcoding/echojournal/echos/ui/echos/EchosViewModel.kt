@@ -8,6 +8,7 @@ import com.plcoding.echojournal.core.ui.util.UiText
 import com.plcoding.echojournal.echos.domain.audio.AudioPlayer
 import com.plcoding.echojournal.echos.domain.recording.VoiceRecorder
 import com.plcoding.echojournal.echos.ui.echos.models.AudioCaptureMethod
+import com.plcoding.echojournal.echos.ui.echos.models.EchoDaySection
 import com.plcoding.echojournal.echos.ui.echos.models.EchoFilterChip
 import com.plcoding.echojournal.echos.ui.echos.models.MoodChipContent
 import com.plcoding.echojournal.echos.ui.echos.models.RecordingState
@@ -17,6 +18,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 
@@ -53,6 +56,7 @@ class EchosViewModel(
         .onStart {
             if (!hasLoadedInitialData) {
                 observerFilters()
+                observeEchoDaySections()
                 hasLoadedInitialData = true
             }
         }
@@ -224,10 +228,19 @@ class EchosViewModel(
                 .distinctUntilChangedBy { it.duration }
                 .map { it.duration }
                 .onEach { duration ->
+                    val minutes = (duration.inWholeMinutes % 60).toInt()
+                    val seconds = (duration.inWholeSeconds % 60).toInt()
+                    val formatted = String.format(
+                        locale = Locale.US,
+                        format = "%02d:%02d",
+                        minutes,
+                        seconds
+                    )
                     _state.update {
-                        it.copy(recordingElapsedDuration = duration)
+                        it.copy(formattedRecordDuration = formatted)
                     }
                 }
+                .flowOn(Dispatchers.Default)
                 .launchIn(viewModelScope)
         }
     }
@@ -278,6 +291,22 @@ class EchosViewModel(
                 )
             }
         }
+            .flowOn(Dispatchers.Default)
+            .launchIn(viewModelScope)
+    }
+
+    private fun observeEchoDaySections() {
+        state
+            .map { it.echos }
+            .distinctUntilChanged()
+            .onEach { echos ->
+                _state.update {
+                    it.copy(
+                        echoDaySections = echos.toList()
+                            .map { (dateHeader, echos) -> EchoDaySection(dateHeader, echos) }
+                    )
+                }
+            }
             .flowOn(Dispatchers.Default)
             .launchIn(viewModelScope)
     }
