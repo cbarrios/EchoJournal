@@ -5,6 +5,7 @@ import com.plcoding.echojournal.echos.domain.echo.Echo
 import com.plcoding.echojournal.echos.domain.echo.EchoDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 
 class RoomEchoDataSource(
     private val echoDao: EchoDao
@@ -34,7 +35,13 @@ class RoomEchoDataSource(
             }
     }
 
-    override suspend fun insertEcho(echo: Echo) {
-        echoDao.insertEchoWithTopics(echo.toEchoWithTopics())
+    override suspend fun insertEcho(echo: Echo): Boolean {
+        return try {
+            echoDao.insertEchoWithTopics(echo.toEchoWithTopics())
+            true
+        } catch (e: Exception) {
+            Timber.e(e, "Inserting echo failed")
+            false
+        }
     }
 }
