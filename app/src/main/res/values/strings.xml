@@ -56,4 +56,6 @@
     <string name="this_can_t_be_undone">This can\'t be undone.</string>
     <string name="error_couldnt_save_file">Oops, saving the file failed</string>
     <string name="error_couldnt_save_echo">Oops, saving the echo failed</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
 </resources>
