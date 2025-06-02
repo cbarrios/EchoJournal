@@ -6,6 +6,7 @@ import com.plcoding.echojournal.R
 import com.plcoding.echojournal.core.ui.design.dropdowns.Selectable
 import com.plcoding.echojournal.core.ui.util.UiText
 import com.plcoding.echojournal.echos.domain.audio.AudioPlayer
+import com.plcoding.echojournal.echos.domain.echo.Echo
 import com.plcoding.echojournal.echos.domain.echo.EchoDataSource
 import com.plcoding.echojournal.echos.domain.recording.VoiceRecorder
 import com.plcoding.echojournal.echos.ui.echos.models.AudioCaptureMethod
@@ -46,7 +47,7 @@ import kotlin.time.Duration.Companion.seconds
 class EchosViewModel(
     private val voiceRecorder: VoiceRecorder,
     private val audioPlayer: AudioPlayer,
-    echoDataSource: EchoDataSource
+    private val echoDataSource: EchoDataSource
 ) : ViewModel() {
 
     companion object {
@@ -81,6 +82,7 @@ class EchosViewModel(
 
     private val echos = echoDataSource
         .observeEchos()
+        .filterByMoodAndTopics()
         .onEach { echos ->
             _state.update {
                 it.copy(
@@ -341,15 +343,16 @@ class EchosViewModel(
 
     private fun observerFilters() {
         combine(
+            echoDataSource.observeTopics(),
             selectedTopicFilters,
             selectedMoodFilters
-        ) { selectedTopics, selectedMoods ->
+        ) { allTopics, selectedTopics, selectedMoods ->
             _state.update {
                 it.copy(
-                    topics = it.topics.map { selectableTopic ->
+                    topics = allTopics.map { topic ->
                         Selectable(
-                            item = selectableTopic.item,
-                            selected = selectedTopics.contains(selectableTopic.item)
+                            item = topic,
+                            selected = selectedTopics.contains(topic)
                         )
                     },
                     moods = MoodUi.entries.map { moodUi ->
@@ -426,6 +429,26 @@ class EchosViewModel(
                         uiTexts = moodNames.take(2).toTypedArray()
                     )
                 )
+            }
+        }
+    }
+
+    private fun Flow<List<Echo>>.filterByMoodAndTopics(): Flow<List<Echo>> {
+        return combine(
+            this,
+            selectedMoodFilters,
+            selectedTopicFilters
+        ) { echos, moodFilters, topicFilters ->
+            echos.filter { echo ->
+                val matchesMoodFilter = moodFilters
+                    .takeIf { it.isNotEmpty() }
+                    ?.any { it.name == echo.mood.name }
+                    ?: true
+                val matchesTopicFilter = topicFilters
+                    .takeIf { it.isNotEmpty() }
+                    ?.any { it in echo.topics }
+                    ?: true
+                matchesMoodFilter && matchesTopicFilter
             }
         }
     }
