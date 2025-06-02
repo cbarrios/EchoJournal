@@ -120,7 +120,12 @@ class CreateEchoViewModel(
             .take(1)
             .onEach { defaultMood ->
                 _state.update {
-                    it.copy(selectedMood = MoodUi.valueOf(defaultMood.name))
+                    val moodUi = MoodUi.valueOf(defaultMood.name)
+                    it.copy(
+                        selectedMood = moodUi,
+                        mood = moodUi,
+                        showMoodSelector = false
+                    )
                 }
             }
             .launchIn(viewModelScope)
